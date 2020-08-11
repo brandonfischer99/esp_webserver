@@ -5,6 +5,8 @@
 
 // Load Wi-Fi library
 #include <ESP8266WiFi.h>
+//Load i2c library
+#include <Wire.h>
 
 #define MAX_HEADER 512
 
@@ -31,6 +33,7 @@ const long timeoutTime = 2000;
 
 void setup() {
   Serial.begin(115200);
+  Wire.begin(D1, D2); /* join i2c bus with SDA=D1 and SCL=D2 of NodeMCU */
 
   // Connect to Wi-Fi network with SSID and password
   Serial.print("Connecting to ");
@@ -81,14 +84,6 @@ void loop(){
 //      client.println("Connection: close");
 //      client.println();
 
-      //Break header into request type and url with 2 strtok calls
-      req_type = strtok(header, " ");
-      url = strtok(NULL, " ");
-            
-      Serial.println(req_type);
-      Serial.println(url);
-            
-            
       // Display the HTML web page
       client.println("<!DOCTYPE html><html>");
       client.println("<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">");
@@ -102,7 +97,47 @@ void loop(){
       
       // Web Page Heading
       client.println("<body><h1>ESP8266 Web Server</h1>");
-      client.println("<p>You're a nerd</p>");
+
+      //Break header into request type and url with 2 strtok calls
+      req_type = strtok(header, " ");
+      url = strtok(NULL, " ");
+            
+      Serial.println(req_type);
+      Serial.println(url);
+
+      //Index page
+      if(url == NULL)
+      {
+        client.println("<p>Home page</p>");
+      }
+      else if(url[0] == '/' && url[1] == 0)
+      {
+        client.println("<p>Home page</p>");
+      }
+      else
+      {
+        char *endpoint;
+        char *argument;
+        //separate url into endpoint and argument
+        endpoint = strtok(url, "/");
+        argument = strtok(NULL, "/");
+
+        Serial.println(endpoint);
+        Serial.println(argument);
+
+        //First endpoint: writess for write seven segment
+        //Format: /writess/<int> where int is an integer 0-9
+        if(strcmp(endpoint, "writess") == 0)
+        {
+            //Begin i2c transmission to board controlling display
+            Wire.beginTransmission(8);
+            //Transmit integer value of char 0 in argument
+            Serial.println(argument[0]-48);
+            Wire.write(argument[0]-48);
+            Wire.endTransmission();
+        }
+      }
+      
       
       client.println("</body></html>");
       
