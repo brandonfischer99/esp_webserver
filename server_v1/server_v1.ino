@@ -108,11 +108,11 @@ void loop(){
       //Index page
       if(url == NULL)
       {
-        client.println("<p>Home page</p>");
+        client.println("<p>NodeMCU: 'What is my purpose master?'<br>Me: 'To light a seven segment display'<br>NodeMCU: 'Oh my god'</p>");
       }
       else if(url[0] == '/' && url[1] == 0)
       {
-        client.println("<p>Home page</p>");
+        client.println("<p>NodeMCU: 'What is my purpose master?'<br>Me: 'To light a seven segment display'<br>NodeMCU: 'Oh my god'</p>");
       }
       else
       {
@@ -129,12 +129,19 @@ void loop(){
         //Format: /writess/<int> where int is an integer 0-9
         if(strcmp(endpoint, "writess") == 0)
         {
-            //Begin i2c transmission to board controlling display
-            Wire.beginTransmission(8);
-            //Transmit integer value of char 0 in argument
-            Serial.println(argument[0]-48);
-            Wire.write(argument[0]-48);
-            Wire.endTransmission();
+            if(argument != NULL)
+            {
+              //Begin i2c transmission to board controlling display
+              Wire.beginTransmission(8);
+              //Transmit integer value of first digit in argument
+              Serial.println(argument[0]-48);
+              Wire.write(argument[0]-48);
+              Wire.endTransmission();
+            }
+            else
+            {
+              client.println("<p>Correct endpoint usage: /writess/num where num is a digit 0-9</p>");
+            }
         }
       }
       
